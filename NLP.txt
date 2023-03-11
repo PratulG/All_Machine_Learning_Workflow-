@@ -1,0 +1,55 @@
+import pandas as pd
+import numpy as np
+import re
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
+from sklearn.decomposition import LatentDirichletAllocation
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+def nlp_workflow(df, text_columns, label_column):
+    # Define the regular expression to remove unwanted characters and patterns
+    clean_regex = r"[^a-zA-Z\s]+"
+
+    # Preprocess the text data
+    for column in text_columns:
+        df[column] = df[column].str.lower().replace(clean_regex, '', regex=True)
+        df[column] = df[column].apply(nltk.word_tokenize)
+        stop_words = stopwords.words('english')
+        df[column] = df[column].apply(lambda x: [word for word in x if word not in stop_words])
+        lemmatizer = WordNetLemmatizer()
+        df[column] = df[column].apply(lambda x: [lemmatizer.lemmatize(word) for word in x])
+
+    # Create n-grams
+    ngram_vectorizer = CountVectorizer(ngram_range=(1, 2))
+    X_ngrams = ngram_vectorizer.fit_transform(df[text_columns].apply(lambda x: ' '.join(x), axis=1))
+
+    # Topic modeling with LDA
+    lda_model = LatentDirichletAllocation(n_components=10, random_state=42)
+    lda_model.fit(X_ngrams)
+    lda_topics = lda_model.transform(X_ngrams)
+
+    # Vectorize the text data with TF-IDF
+    tfidf_vectorizer = TfidfVectorizer()
+    X_tfidf = tfidf_vectorizer.fit_transform(df[text_columns].apply(lambda x: ' '.join(x), axis=1))
+
+    # Train and evaluate the model
+    y = df[label_column]
+    X_train, X_test, y_train, y_test = train_test_split(X_tfidf, y, test_size=0.2, random_state=42)
+    clf = MultinomialNB()
+    clf.fit(X_train, y_train)
+    y_pred = clf.predict(X_test)
+    print('Accuracy:', accuracy_score(y_test, y_pred))
+    print('Confusion matrix:\n', confusion_matrix(y_test, y_pred))
+
+
+To use this function, simply pass in your DataFrame, the list of text columns you want to preprocess, and the name of the label column:
+
+# Load the dataset
+df = pd.read_csv('path/to/dataset.csv')
+
+# Run the NLP workflow function on the selected columns
+nlp_workflow(df, ['text_1', 'text_2', 'text_3'], 'label')

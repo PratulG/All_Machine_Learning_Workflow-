@@ -1,0 +1,80 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+df = pd.read_csv('path/to/dataset.csv')
+
+# Print the first 5 rows of the dataset
+print(df.head())
+
+# Print the shape of the dataset
+print(df.shape)
+
+# Print the data types of each column
+print(df.dtypes)
+
+# Print the number of unique values in each column
+print(df.nunique())
+
+# Print the summary statistics of the dataset
+print(df.describe())
+
+# Print the column names of the dataset
+print(df.columns)
+
+# Check for missing values
+print(df.isnull().sum())
+
+# Visualize the distribution of a numeric variable
+sns.histplot(df['numeric_variable'], kde=False)
+
+# Visualize the distribution of a categorical variable
+sns.countplot(df['categorical_variable'])
+
+# Visualize the relationship between two variables
+sns.scatterplot(x='variable1', y='variable2', data=df)
+
+# Visualize the relationship between two variables with hue
+sns.scatterplot(x='variable1', y='variable2', hue='categorical_variable', data=df)
+
+# Visualize the correlation matrix of the variables
+sns.heatmap(df.corr(), cmap='coolwarm', annot=True)
+
+# Identify outliers in a numeric variable
+sns.boxplot(df['numeric_variable'])
+
+# Identify outliers in a numeric variable with hue
+sns.boxplot(x='categorical_variable', y='numeric_variable', data=df)
+
+# Identify the most frequent values in a categorical variable
+df['categorical_variable'].value_counts()
+
+# Identify the correlation between two variables
+df[['variable1', 'variable2']].corr()
+
+# Identify the correlation between all variables
+df.corr()
+
+# Handle missing values
+df.dropna()  # Drop rows with missing values
+df.fillna(0)  # Replace missing values with 0
+df.fillna(df.mean())  # Replace missing values with the mean of the column
+
+# Handle outliers
+# Winsorization method
+from scipy.stats.mstats import winsorize
+df['numeric_variable'] = winsorize(df['numeric_variable'], limits=[0.05, 0.05])
+
+# Z-score method
+from scipy import stats
+z = np.abs(stats.zscore(df['numeric_variable']))
+df['numeric_variable'] = df['numeric_variable'][(z < 3)]
+
+# Log transformation
+df['numeric_variable'] = np.log(df['numeric_variable'])
+
+# Feature engineering
+df['new_variable'] = df['variable1'] + df['variable2']
+df['new_variable2'] = df['variable1'] * df['variable2']
